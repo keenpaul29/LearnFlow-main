@@ -21,18 +21,13 @@ export function AIStudyAssistant() {
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage: Message = {
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage: Message = { role: 'user', content: input, timestamp: new Date() };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your actual AI API endpoint
       const response = await fetch('/api/ai/study-assistant', {
         method: 'POST',
         headers: {
@@ -45,16 +40,27 @@ export function AIStudyAssistant() {
       });
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        // Handle error but don't throw - display a user-friendly message instead
+        console.error('AI Assistant Error:', data.error);
+        setMessages([...newMessages, { 
+          role: 'assistant', 
+          content: "I'm sorry, but I'm having trouble connecting to the AI service. Please try again later or check your API configuration.",
+          timestamp: new Date() 
+        }]);
+        return;
+      }
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error:', error);
+      setMessages([...newMessages, { role: 'assistant', content: data.response, timestamp: new Date() }]);
+    } catch (error: any) {
+      console.error('AI Assistant Error:', error);
+      // Add a friendly error message to the chat instead of showing a toast
+      setMessages([...newMessages, { 
+        role: 'assistant', 
+        content: "I'm sorry, but I encountered an error. The AI service might be temporarily unavailable or there might be an issue with your API key configuration.",
+        timestamp: new Date() 
+      }]);
     } finally {
       setIsLoading(false);
     }

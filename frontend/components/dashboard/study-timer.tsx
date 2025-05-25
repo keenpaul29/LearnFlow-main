@@ -9,9 +9,14 @@ import { motion } from 'framer-motion';
 import { toast } from '@/components/ui/use-toast';
 
 export function StudyTimer() {
-  const [timeLeft, setTimeLeft] = useState(0); // Start at 0 seconds
+  const [selectedDuration, setSelectedDuration] = useState(25); // Default to 25 minutes
+  const [timeLeft, setTimeLeft] = useState(selectedDuration * 60); // Initialize with the selected duration in seconds
   const [isRunning, setIsRunning] = useState(false);
-  const [selectedDuration, setSelectedDuration] = useState(0); // Start at 0 minutes
+
+  // Initialize timeLeft with selectedDuration when component mounts
+  useEffect(() => {
+    setTimeLeft(selectedDuration * 60);
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -30,10 +35,12 @@ export function StudyTimer() {
           return time - 1;
         });
       }, 1000);
+    } else if (timeLeft === 0) {
+      setIsRunning(false);
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, selectedDuration]);
 
   const toggleTimer = () => {
     setIsRunning(!isRunning);
@@ -54,6 +61,8 @@ export function StudyTimer() {
     const duration = value[0];
     setSelectedDuration(duration);
     setTimeLeft(duration * 60);
+    // Reset the timer state when duration changes
+    setIsRunning(false);
   };
 
   return (
@@ -98,7 +107,7 @@ export function StudyTimer() {
                 Session Duration: {selectedDuration} minutes
               </label>
               <Slider
-                defaultValue={[25]}
+                value={[selectedDuration]}
                 max={60}
                 min={5}
                 step={5}
